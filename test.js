@@ -121,7 +121,7 @@ tests.FLUSHDB = function () {
     client2.select(test_db_num, require_string("OK", name));
     client3.select(test_db_num, require_string("OK", name));
     client.mset("flush keys 1", "flush val 1", "flush keys 2", "flush val 2", require_string("OK", name));
-    client.FLUSHDB(require_string("OK", name));
+    client.flushdb(require_string("OK", name));
     client.dbsize(last(name, require_number(0, name)));
 };
 
@@ -895,16 +895,16 @@ tests.HSET = function () {
         value2 = new Buffer(0),
         name = "HSET";
 
-    client.HSET(key, field1, value1, require_number(1, name));
-    client.HGET(key, field1, require_string(value1.toString(), name));
+    client.hset(key, field1, value1, require_number(1, name));
+    client.hget(key, field1, require_string(value1.toString(), name));
 
     // Empty value
-    client.HSET(key, field1, value2, require_number(0, name));
-    client.HGET([key, field1], require_string("", name));
+    client.hset(key, field1, value2, require_number(0, name));
+    client.hget([key, field1], require_string("", name));
 
     // Empty key, empty value
-    client.HSET([key, field2, value1], require_number(1, name));
-    client.HSET(key, field2, value2, last(name, require_number(0, name)));
+    client.hset([key, field2, value1], require_number(1, name));
+    client.hset(key, field2, value2, last(name, require_number(0, name)));
 };
 
 tests.HLEN = function () {
@@ -916,8 +916,8 @@ tests.HLEN = function () {
         name = "HSET",
         timeout = 1000;
 
-    client.HSET(key, field1, value1, function (err, results) {
-        client.HLEN(key, function (err, len) {
+    client.hset(key, field1, value1, function (err, results) {
+        client.hlen(key, function (err, len) {
             assert.ok(2 === +len);
             next(name);
         });
@@ -933,7 +933,7 @@ tests.HMSET_BUFFER_AND_ARRAY = function () {
         value2 = ["array contents"],
         name = "HSET";
 
-    client.HMSET(key, field1, value1, field2, value2, last(name, require_string("OK", name)));
+    client.hmset(key, field1, value1, field2, value2, last(name, require_string("OK", name)));
 };
 
 // TODO - add test for HMSET with optional callbacks
@@ -942,45 +942,45 @@ tests.HMGET = function () {
     var key1 = "test hash 1", key2 = "test hash 2", key3 = 123456789, name = "HMGET";
 
     // redis-like hmset syntax
-    client.HMSET(key1, "0123456789", "abcdefghij", "some manner of key", "a type of value", require_string("OK", name));
+    client.hmset(key1, "0123456789", "abcdefghij", "some manner of key", "a type of value", require_string("OK", name));
 
     // fancy hmset syntax
-    client.HMSET(key2, {
+    client.hmset(key2, {
         "0123456789": "abcdefghij",
         "some manner of key": "a type of value"
     }, require_string("OK", name));
 
     // test for numeric key
-    client.HMSET(key3, {
+    client.hmset(key3, {
         "0123456789": "abcdefghij",
         "some manner of key": "a type of value"
     }, require_string("OK", name));    
 
-    client.HMGET(key1, "0123456789", "some manner of key", function (err, reply) {
+    client.hmget(key1, "0123456789", "some manner of key", function (err, reply) {
         assert.strictEqual("abcdefghij", reply[0].toString(), name);
         assert.strictEqual("a type of value", reply[1].toString(), name);
     });
 
-    client.HMGET(key2, "0123456789", "some manner of key", function (err, reply) {
+    client.hmget(key2, "0123456789", "some manner of key", function (err, reply) {
         assert.strictEqual("abcdefghij", reply[0].toString(), name);
         assert.strictEqual("a type of value", reply[1].toString(), name);
     });
 
-    client.HMGET(key3, "0123456789", "some manner of key", function (err, reply) {
+    client.hmget(key3, "0123456789", "some manner of key", function (err, reply) {
         assert.strictEqual("abcdefghij", reply[0].toString(), name);
         assert.strictEqual("a type of value", reply[1].toString(), name);
     });
 
-    client.HMGET(key1, ["0123456789"], function (err, reply) {
+    client.hmget(key1, ["0123456789"], function (err, reply) {
         assert.strictEqual("abcdefghij", reply[0], name);
     });
 
-    client.HMGET(key1, ["0123456789", "some manner of key"], function (err, reply) {
+    client.hmget(key1, ["0123456789", "some manner of key"], function (err, reply) {
         assert.strictEqual("abcdefghij", reply[0], name);
         assert.strictEqual("a type of value", reply[1], name);
     });
 
-    client.HMGET(key1, "missing thing", "another missing thing", function (err, reply) {
+    client.hmget(key1, "missing thing", "another missing thing", function (err, reply) {
         assert.strictEqual(null, reply[0], name);
         assert.strictEqual(null, reply[1], name);
         next(name);
@@ -990,8 +990,8 @@ tests.HMGET = function () {
 tests.HINCRBY = function () {
     var name = "HINCRBY";
     client.hset("hash incr", "value", 10, require_number(1, name));
-    client.HINCRBY("hash incr", "value", 1, require_number(11, name));
-    client.HINCRBY("hash incr", "value 2", 1, last(name, require_number(1, name)));
+    client.hincrby("hash incr", "value", 1, require_number(11, name));
+    client.hincrby("hash incr", "value 2", 1, last(name, require_number(1, name)));
 };
 
 tests.SUBSCRIBE = function () {
@@ -1193,19 +1193,19 @@ tests.EXISTS = function () {
     var name = "EXISTS";
     client.del("foo", "foo2", require_number_any(name));
     client.set("foo", "bar", require_string("OK", name));
-    client.EXISTS("foo", require_number(1, name));
-    client.EXISTS("foo2", last(name, require_number(0, name)));
+    client.exists("foo", require_number(1, name));
+    client.exists("foo2", last(name, require_number(0, name)));
 };
 
 tests.DEL = function () {
     var name = "DEL";
-    client.DEL("delkey", require_number_any(name));
+    client.del("delkey", require_number_any(name));
     client.set("delkey", "delvalue", require_string("OK", name));
-    client.DEL("delkey", require_number(1, name));
+    client.del("delkey", require_number(1, name));
     client.exists("delkey", require_number(0, name));
-    client.DEL("delkey", require_number(0, name));
+    client.del("delkey", require_number(0, name));
     client.mset("delkey", "delvalue", "delkey2", "delvalue2", require_string("OK", name));
-    client.DEL("delkey", "delkey2", last(name, require_number(2, name)));
+    client.del("delkey", "delkey2", last(name, require_number(2, name)));
 };
 
 tests.TYPE = function () {
@@ -1216,18 +1216,18 @@ tests.TYPE = function () {
     client.zadd(["zset key", "10.0", "should be a zset"], require_number_any(name));
     client.hset(["hash key", "hashtest", "should be a hash"], require_number_any(0, name));
 
-    client.TYPE(["string key"], require_string("string", name));
-    client.TYPE(["list key"], require_string("list", name));
-    client.TYPE(["set key"], require_string("set", name));
-    client.TYPE(["zset key"], require_string("zset", name));
-    client.TYPE("not here yet", require_string("none", name));
-    client.TYPE(["hash key"], last(name, require_string("hash", name)));
+    client.type(["string key"], require_string("string", name));
+    client.type(["list key"], require_string("list", name));
+    client.type(["set key"], require_string("set", name));
+    client.type(["zset key"], require_string("zset", name));
+    client.type("not here yet", require_string("none", name));
+    client.type(["hash key"], last(name, require_string("hash", name)));
 };
 
 tests.KEYS = function () {
     var name = "KEYS";
     client.mset(["test keys 1", "test val 1", "test keys 2", "test val 2"], require_string("OK", name));
-    client.KEYS(["test keys*"], function (err, results) {
+    client.keys(["test keys*"], function (err, results) {
         assert.strictEqual(null, err, "result sent back unexpected error: " + err);
         assert.strictEqual(2, results.length, name);
         assert.ok(~results.indexOf("test keys 1"));
@@ -1252,7 +1252,7 @@ tests.MULTIBULK = function() {
         return a.concat(b);
     }), require_string("OK", name));
 
-    client.KEYS("multibulk:*", function(err, results) {
+    client.keys("multibulk:*", function(err, results) {
         assert.strictEqual(null, err, "result sent back unexpected error: " + err);
         assert.deepEqual(keys_values.map(function(val) {
             return val[0];
@@ -1264,7 +1264,7 @@ tests.MULTIBULK = function() {
 
 tests.MULTIBULK_ZERO_LENGTH = function () {
     var name = "MULTIBULK_ZERO_LENGTH";
-    client.KEYS(['users:*'], function (err, results) {
+    client.keys(['users:*'], function (err, results) {
         assert.strictEqual(null, err, 'error on empty multibulk reply');
         assert.strictEqual(true, is_empty_array(results), "not an empty array");
         next(name);
@@ -1274,7 +1274,7 @@ tests.MULTIBULK_ZERO_LENGTH = function () {
 tests.RANDOMKEY = function () {
     var name = "RANDOMKEY";
     client.mset(["test keys 1", "test val 1", "test keys 2", "test val 2"], require_string("OK", name));
-    client.RANDOMKEY([], function (err, results) {
+    client.randomkey([], function (err, results) {
         assert.strictEqual(null, err, name + " result sent back unexpected error: " + err);
         assert.strictEqual(true, /\w+/.test(results), name);
         next(name);
@@ -1284,7 +1284,7 @@ tests.RANDOMKEY = function () {
 tests.RENAME = function () {
     var name = "RENAME";
     client.set(['foo', 'bar'], require_string("OK", name));
-    client.RENAME(["foo", "new foo"], require_string("OK", name));
+    client.rename(["foo", "new foo"], require_string("OK", name));
     client.exists(["foo"], require_number(0, name));
     client.exists(["new foo"], last(name, require_number(1, name)));
 };
@@ -1293,11 +1293,11 @@ tests.RENAMENX = function () {
     var name = "RENAMENX";
     client.set(['foo', 'bar'], require_string("OK", name));
     client.set(['foo2', 'bar2'], require_string("OK", name));
-    client.RENAMENX(["foo", "foo2"], require_number(0, name));
+    client.renamenx(["foo", "foo2"], require_number(0, name));
     client.exists(["foo"], require_number(1, name));
     client.exists(["foo2"], require_number(1, name));
     client.del(["foo2"], require_number(1, name));
-    client.RENAMENX(["foo", "foo2"], require_number(1, name));
+    client.renamenx(["foo", "foo2"], require_number(1, name));
     client.exists(["foo"], require_number(0, name));
     client.exists(["foo2"], last(name, require_number(1, name)));
 };
@@ -1305,54 +1305,54 @@ tests.RENAMENX = function () {
 tests.DBSIZE = function () {
     var name = "DBSIZE";
     client.set(['foo', 'bar'], require_string("OK", name));
-    client.DBSIZE([], last(name, require_number_pos("DBSIZE")));
+    client.dbsize([], last(name, require_number_pos("DBSIZE")));
 };
 
 tests.GET_1 = function () {
     var name = "GET_1";
     client.set(["get key", "get val"], require_string("OK", name));
-    client.GET(["get key"], last(name, require_string("get val", name)));
+    client.get(["get key"], last(name, require_string("get val", name)));
 };
 
 tests.GET_2 = function() {
     var name = "GET_2";
 
     // tests handling of non-existent keys
-    client.GET('this_key_shouldnt_exist', last(name, require_null(name)));
+    client.get('this_key_shouldnt_exist', last(name, require_null(name)));
 };
 
 tests.SET = function () {
     var name = "SET";
-    client.SET(["set key", "set val"], require_string("OK", name));
+    client.set(["set key", "set val"], require_string("OK", name));
     client.get(["set key"], last(name, require_string("set val", name)));
-    client.SET(["set key", undefined], require_error(name));
+    client.set(["set key", undefined], require_error(name));
 };
 
 tests.GETSET = function () {
     var name = "GETSET";
     client.set(["getset key", "getset val"], require_string("OK", name));
-    client.GETSET(["getset key", "new getset val"], require_string("getset val", name));
+    client.getset(["getset key", "new getset val"], require_string("getset val", name));
     client.get(["getset key"], last(name, require_string("new getset val", name)));
 };
 
 tests.MGET = function () {
     var name = "MGET";
     client.mset(["mget keys 1", "mget val 1", "mget keys 2", "mget val 2", "mget keys 3", "mget val 3"], require_string("OK", name));
-    client.MGET("mget keys 1", "mget keys 2", "mget keys 3", function (err, results) {
+    client.mget("mget keys 1", "mget keys 2", "mget keys 3", function (err, results) {
         assert.strictEqual(null, err, "result sent back unexpected error: " + err);
         assert.strictEqual(3, results.length, name);
         assert.strictEqual("mget val 1", results[0].toString(), name);
         assert.strictEqual("mget val 2", results[1].toString(), name);
         assert.strictEqual("mget val 3", results[2].toString(), name);
     });
-    client.MGET(["mget keys 1", "mget keys 2", "mget keys 3"], function (err, results) {
+    client.mget(["mget keys 1", "mget keys 2", "mget keys 3"], function (err, results) {
         assert.strictEqual(null, err, "result sent back unexpected error: " + err);
         assert.strictEqual(3, results.length, name);
         assert.strictEqual("mget val 1", results[0].toString(), name);
         assert.strictEqual("mget val 2", results[1].toString(), name);
         assert.strictEqual("mget val 3", results[2].toString(), name);
     });
-    client.MGET(["mget keys 1", "some random shit", "mget keys 2", "mget keys 3"], function (err, results) {
+    client.mget(["mget keys 1", "some random shit", "mget keys 2", "mget keys 3"], function (err, results) {
         assert.strictEqual(null, err, "result sent back unexpected error: " + err);
         assert.strictEqual(4, results.length, name);
         assert.strictEqual("mget val 1", results[0].toString(), name);
@@ -1366,27 +1366,27 @@ tests.MGET = function () {
 tests.SETNX = function () {
     var name = "SETNX";
     client.set(["setnx key", "setnx value"], require_string("OK", name));
-    client.SETNX(["setnx key", "new setnx value"], require_number(0, name));
+    client.setnx(["setnx key", "new setnx value"], require_number(0, name));
     client.del(["setnx key"], require_number(1, name));
     client.exists(["setnx key"], require_number(0, name));
-    client.SETNX(["setnx key", "new setnx value"], require_number(1, name));
+    client.setnx(["setnx key", "new setnx value"], require_number(1, name));
     client.exists(["setnx key"], last(name, require_number(1, name)));
 };
 
 tests.SETEX = function () {
     var name = "SETEX";
-    client.SETEX(["setex key", "100", "setex val"], require_string("OK", name));
+    client.setex(["setex key", "100", "setex val"], require_string("OK", name));
     client.exists(["setex key"], require_number(1, name));
     client.ttl(["setex key"], last(name, require_number_pos(name)));
-    client.SETEX(["setex key", "100", undefined], require_error(name));
+    client.setex(["setex key", "100", undefined], require_error(name));
 };
 
 tests.MSETNX = function () {
     var name = "MSETNX";
     client.mset(["mset1", "val1", "mset2", "val2", "mset3", "val3"], require_string("OK", name));
-    client.MSETNX(["mset3", "val3", "mset4", "val4"], require_number(0, name));
+    client.msetnx(["mset3", "val3", "mset4", "val4"], require_number(0, name));
     client.del(["mset3"], require_number(1, name));
-    client.MSETNX(["mset3", "val3", "mset4", "val4"], require_number(1, name));
+    client.msetnx(["mset3", "val3", "mset4", "val4"], require_number(1, name));
     client.exists(["mset3"], require_number(1, name));
     client.exists(["mset4"], last(name, require_number(1, name)));
 };
@@ -1394,7 +1394,7 @@ tests.MSETNX = function () {
 tests.HGETALL = function () {
     var name = "HGETALL";
     client.hmset(["hosts", "mjr", "1", "another", "23", "home", "1234"], require_string("OK", name));
-    client.HGETALL(["hosts"], function (err, obj) {
+    client.hgetall(["hosts"], function (err, obj) {
         assert.strictEqual(null, err, name + " result sent back unexpected error: " + err);
         assert.strictEqual(3, Object.keys(obj).length, name);
         assert.strictEqual("1", obj.mjr.toString(), name);
@@ -1407,7 +1407,7 @@ tests.HGETALL = function () {
 tests.HGETALL_2 = function () {
     var name = "HGETALL (Binary client)";
     bclient.hmset(["bhosts", "mjr", "1", "another", "23", "home", "1234", new Buffer([0xAA, 0xBB, 0x00, 0xF0]), new Buffer([0xCC, 0xDD, 0x00, 0xF0])], require_string("OK", name));
-    bclient.HGETALL(["bhosts"], function (err, obj) {
+    bclient.hgetall(["bhosts"], function (err, obj) {
         assert.strictEqual(null, err, name + " result sent back unexpected error: " + err);
         assert.strictEqual(4, Object.keys(obj).length, name);
         assert.strictEqual("1", obj.mjr.toString(), name);
@@ -1458,7 +1458,7 @@ tests.SADD = function () {
     var name = "SADD";
 
     client.del('set0');
-    client.SADD('set0', 'member0', require_number(1, name));
+    client.sadd('set0', 'member0', require_number(1, name));
     client.sadd('set0', 'member0', last(name, require_number(0, name)));
 };
 
@@ -1473,7 +1473,7 @@ tests.SADD2 = function () {
         assert.ok(~res.indexOf("member1"));
         assert.ok(~res.indexOf("member2"));
     });
-    client.SADD("set1", ["member0", "member1", "member2"], require_number(3, name));
+    client.sadd("set1", ["member0", "member1", "member2"], require_number(3, name));
     client.smembers("set1", function (err, res) {
         assert.strictEqual(res.length, 3);
         assert.ok(~res.indexOf("member0"));
@@ -1517,7 +1517,7 @@ tests.SREM2 = function () {
     var name = "SREM2";
     client.del("set0");
     client.sadd("set0", ["member0", "member1", "member2"], require_number(3, name));
-    client.SREM("set0", ["member1", "member2"], require_number(2, name));
+    client.srem("set0", ["member1", "member2"], require_number(2, name));
     client.smembers("set0", function (err, res) {
         assert.strictEqual(res.length, 1);
         assert.ok(~res.indexOf("member0"));
@@ -1964,13 +1964,13 @@ tests.BLPOP = function () {
     var name = "BLPOP";
 
     client.rpush("blocking list", "initial value", function (err, res) {
-        client2.BLPOP("blocking list", 0, function (err, res) {
+        client2.blpop("blocking list", 0, function (err, res) {
             assert.strictEqual("blocking list", res[0].toString());
             assert.strictEqual("initial value", res[1].toString());
 
             client.rpush("blocking list", "wait for this value");
         });
-        client2.BLPOP("blocking list", 0, function (err, res) {
+        client2.blpop("blocking list", 0, function (err, res) {
             assert.strictEqual("blocking list", res[0].toString());
             assert.strictEqual("wait for this value", res[1].toString());
             next(name);
@@ -1982,7 +1982,7 @@ tests.BLPOP_TIMEOUT = function () {
     var name = "BLPOP_TIMEOUT";
 
     // try to BLPOP the list again, which should be empty.  This should timeout and return null.
-    client2.BLPOP("blocking list", 1, function (err, res) {
+    client2.blpop("blocking list", 1, function (err, res) {
         if (err) {
             throw err;
         }
@@ -1995,7 +1995,7 @@ tests.BLPOP_TIMEOUT = function () {
 tests.EXPIRE = function () {
     var name = "EXPIRE";
     client.set(['expiry key', 'bar'], require_string("OK", name));
-    client.EXPIRE(["expiry key", "1"], require_number_pos(name));
+    client.expire(["expiry key", "1"], require_number_pos(name));
     setTimeout(function () {
         client.exists(["expiry key"], last(name, require_number(0, name)));
     }, 2000);
@@ -2006,7 +2006,7 @@ tests.TTL = function () {
     client.set(["ttl key", "ttl val"], require_string("OK", name));
     client.expire(["ttl key", "100"], require_number_pos(name));
     setTimeout(function () {
-        client.TTL(["ttl key"], last(name, require_number_pos(0, name)));
+        client.ttl(["ttl key"], last(name, require_number_pos(0, name)));
     }, 500);
 };
 

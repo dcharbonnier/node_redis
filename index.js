@@ -654,7 +654,7 @@ RedisClient.prototype.return_reply = function (reply) {
             }
 
             // TODO - confusing and error-prone that hgetall is special cased in two places
-            if (reply && 'hgetall' === command_obj.command.toLowerCase()) {
+            if (reply && 'hgetall' === command_obj.command) {
                 reply = reply_to_object(reply);
             }
 
@@ -753,8 +753,7 @@ RedisClient.prototype.send_command = function (command, args, callback) {
     //     client.sadd(arg1, [arg2, arg3, arg4], cb);
     //  converts to:
     //     client.sadd(arg1, arg2, arg3, arg4, cb);
-    lcaseCommand = command.toLowerCase();
-    if ((lcaseCommand === 'sadd' || lcaseCommand === 'srem') && args.length > 0 && Array.isArray(args[args.length - 1])) {
+    if ((command === 'sadd' || command === 'srem') && args.length > 0 && Array.isArray(args[args.length - 1])) {
         args = args.slice(0, -1).concat(args[args.length - 1]);
     }
 
@@ -959,13 +958,11 @@ commands.forEach(function (fullCommand) {
             return this.send_command(command, to_array(arguments));
         }
     };
-    RedisClient.prototype[command.toUpperCase()] = RedisClient.prototype[command];
 
     Multi.prototype[command] = function () {
         this.queue.push([command].concat(to_array(arguments)));
         return this;
     };
-    Multi.prototype[command.toUpperCase()] = Multi.prototype[command];
 });
 
 // store db in this.select_db to restore it on reconnect
@@ -983,7 +980,6 @@ RedisClient.prototype.select = function (db, callback) {
         }
     });
 };
-RedisClient.prototype.SELECT = RedisClient.prototype.select;
 
 // Stash auth for connect and reconnect.  Send immediately if already connected.
 RedisClient.prototype.auth = function () {
@@ -998,7 +994,6 @@ RedisClient.prototype.auth = function () {
         this.send_command("auth", args);
     }
 };
-RedisClient.prototype.AUTH = RedisClient.prototype.auth;
 
 RedisClient.prototype.hmget = function (arg1, arg2, arg3) {
     if (Array.isArray(arg2) && typeof arg3 === "function") {
@@ -1009,7 +1004,6 @@ RedisClient.prototype.hmget = function (arg1, arg2, arg3) {
         return this.send_command("hmget", to_array(arguments));
     }
 };
-RedisClient.prototype.HMGET = RedisClient.prototype.hmget;
 
 RedisClient.prototype.hmset = function (args, callback) {
     var tmp_args, tmp_keys, i, il, key;
@@ -1047,7 +1041,6 @@ RedisClient.prototype.hmset = function (args, callback) {
 
     return this.send_command("hmset", args, callback);
 };
-RedisClient.prototype.HMSET = RedisClient.prototype.hmset;
 
 Multi.prototype.hmset = function () {
     var args = to_array(arguments), tmp_args;
@@ -1068,7 +1061,6 @@ Multi.prototype.hmset = function () {
     this.queue.push(args);
     return this;
 };
-Multi.prototype.HMSET = Multi.prototype.hmset;
 
 Multi.prototype.exec = function (callback) {
     var self = this;
@@ -1085,7 +1077,7 @@ Multi.prototype.exec = function (callback) {
         if (args.length === 1 && Array.isArray(args[0])) {
             args = args[0];
         }
-        if (command.toLowerCase() === 'hmset' && typeof args[1] === 'object') {
+        if (command === 'hmset' && typeof args[1] === 'object') {
             obj = args.pop();
             Object.keys(obj).forEach(function (key) {
                 args.push(key);
@@ -1124,7 +1116,7 @@ Multi.prototype.exec = function (callback) {
                 args = self.queue[i];
 
                 // TODO - confusing and error-prone that hgetall is special cased in two places
-                if (reply && args[0].toLowerCase() === "hgetall") {
+                if (reply && args[0] === "hgetall") {
                     replies[i - 1] = reply = reply_to_object(reply);
                 }
 
@@ -1139,12 +1131,8 @@ Multi.prototype.exec = function (callback) {
         }
     });
 };
-Multi.prototype.EXEC = Multi.prototype.exec;
 
 RedisClient.prototype.multi = function (args) {
-    return new Multi(this, args);
-};
-RedisClient.prototype.MULTI = function (args) {
     return new Multi(this, args);
 };
 
